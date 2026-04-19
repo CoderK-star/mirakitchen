@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ChevronRight, Flame, BookOpen } from "lucide-react";
+import { ChevronRight, Flame, BookOpen, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { calcLevelInfo } from "@/lib/level";
@@ -147,6 +147,29 @@ export default async function HomePage() {
             </p>
           </div>
         </div>
+
+        {/* ⑥ AI シェフ バナー (col-span-2) */}
+        <Link
+          href="/ai-chef"
+          className="col-span-2 rounded-2xl overflow-hidden relative bg-gradient-to-r from-[#FF8C00] to-[#FF6B35] shadow-sm p-4 flex items-center justify-between active:scale-[0.98] transition"
+        >
+          <div className="flex flex-col gap-1">
+            <span className="flex items-center gap-1 text-[10px] font-bold text-white/80">
+              <Sparkles size={11} />
+              NEW
+            </span>
+            <p className="text-white font-extrabold text-sm leading-tight">
+              AIシェフに相談する
+            </p>
+            <p className="text-white/80 text-[10px]">
+              レシピ生成・献立作成・Web検索
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-3xl">🤖</span>
+            <ChevronRight size={18} className="text-white/80" />
+          </div>
+        </Link>
       </div>
     </div>
   );

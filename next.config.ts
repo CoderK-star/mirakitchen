@@ -7,6 +7,21 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  images: {
+    remotePatterns: [
+      {
+        // Supabase Storage（画像キャッシュ用）
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/object/public/**",
+      },
+      {
+        // Google / Imagen 生成画像（direct URL の場合）
+        protocol: "https",
+        hostname: "*.googleapis.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

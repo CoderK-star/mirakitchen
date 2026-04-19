@@ -27,6 +27,10 @@ export interface Recipe {
   required_level: number
   xp_reward: number
   created_at: string
+  // AI機能拡張フィールド
+  created_by: UUID | null
+  source_url: string | null
+  is_ai_generated: boolean
 }
 
 export interface RecipeStep {
@@ -104,4 +108,88 @@ export interface CookingSession {
   currentStep: number
   totalSteps: number
   startedAt: Date
+}
+
+// ============================================================
+// AI 機能関連型
+// ============================================================
+
+// --------------- 献立 ---------------
+
+export type MealType = 'breakfast' | 'lunch' | 'dinner'
+
+export interface MealPlan {
+  id: UUID
+  user_id: UUID
+  title: string
+  start_date: string | null
+  created_at: string
+}
+
+export interface MealPlanItem {
+  id: UUID
+  meal_plan_id: UUID
+  day_index: number
+  meal_type: MealType
+  recipe_id: UUID | null
+  custom_title: string | null
+  note: string | null
+}
+
+export interface MealPlanWithItems extends MealPlan {
+  meal_plan_items: MealPlanItem[]
+}
+
+// --------------- AI 生成レシピ（プレビュー）---------------
+
+/** AI が生成したがまだ DB 未保存のレシピ草稿 */
+export interface AiRecipeDraft {
+  title: string
+  description: string
+  difficulty_level: DifficultyLevel
+  prep_time: number
+  category: RecipeCategory
+  required_level: number
+  xp_reward: number
+  steps: AiRecipeStepDraft[]
+  generatedImageUrl?: string | null
+}
+
+export interface AiRecipeStepDraft {
+  step_number: number
+  instruction: string
+  tip: string | null
+}
+
+// --------------- AI 献立（プレビュー）---------------
+
+export interface AiMealPlanDay {
+  day_index: number
+  breakfast: AiMealSlot | null
+  lunch: AiMealSlot | null
+  dinner: AiMealSlot | null
+}
+
+export interface AiMealSlot {
+  title: string
+  description: string | null
+  prep_time: number
+  category: RecipeCategory
+  note: string | null
+}
+
+export interface AiMealPlanDraft {
+  planTitle: string
+  days: AiMealPlanDay[]
+}
+
+// --------------- Web 検索結果 ---------------
+
+export interface WebSearchRecipe {
+  title: string
+  description: string
+  sourceUrl: string
+  sourceName: string
+  prep_time: number | null
+  category: RecipeCategory | null
 }

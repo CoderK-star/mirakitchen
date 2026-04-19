@@ -145,6 +145,58 @@ npm run dev
 
 ---
 
+## Vercel へのデプロイ
+
+### 1. Vercel アカウントの準備
+
+1. [https://vercel.com](https://vercel.com) にアクセスし、GitHub アカウントでサインアップ（無料プランで可）
+
+### 2. リポジトリを GitHub にプッシュ
+
+```bash
+git init
+git add .
+git commit -m "initial commit"
+git remote add origin <YOUR_REPO_URL>
+git push -u origin main
+```
+
+### 3. Vercel にプロジェクトをインポート
+
+1. Vercel ダッシュボード → **「Add New... → Project」**
+2. GitHub リポジトリ一覧から `mirakitchen` を選択し **「Import」**
+3. Framework Preset が **Next.js** になっていることを確認
+4. **「Environment Variables」** セクションで以下を追加する
+
+   | 変数名                          | 値                              |
+   |---------------------------------|---------------------------------|
+   | `NEXT_PUBLIC_SUPABASE_URL`      | Supabase の Project URL         |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase の `anon` `public` キー |
+   | `GOOGLE_GENERATIVE_AI_API_KEY`  | Google Generative AI API キー  |
+
+5. **「Deploy」** をクリック
+
+### 4. Supabase の Auth リダイレクト URL を更新
+
+デプロイ後、Supabase 側で本番 URL を許可リストに追加する。
+
+1. Supabase ダッシュボード → **「Authentication」** → **「URL Configuration」**
+2. **Site URL** を Vercel のデプロイ URL に変更（例: `https://mirakitchen.vercel.app`）
+3. **Redirect URLs** に以下を追加する
+
+   ```text
+   https://mirakitchen.vercel.app/**
+   ```
+
+### 5. 継続的デプロイ
+
+`main` ブランチへのプッシュが自動的に本番デプロイされます。
+プルリクエストごとにプレビュー URL が生成されます。
+
+> **カスタムドメインを使う場合:** Vercel ダッシュボード → プロジェクト → **「Settings」** → **「Domains」** からドメインを追加し、DNS レコードを設定してください。
+
+---
+
 ## 利用可能なスクリプト
 
 | コマンド | 説明 |
@@ -180,7 +232,23 @@ shopping_list_items   買い物リスト
 ### `Both middleware file and proxy file are detected`
 
 `src/middleware.ts` と `src/proxy.ts` が両方存在しています。
-→ `src/middleware.ts` を削除してください（`proxy.ts` が新しい規約です）。
+→ `src/middleware.ts` の中身を確認し、`proxy.ts` を呼び出す形になっているか確認してください。
+
+### ログインで 400 エラーが発生する
+
+以下を順番に確認してください。
+
+1. **Vercel の環境変数が設定されているか**  
+   Vercel ダッシュボード → Settings → Environment Variables に `NEXT_PUBLIC_SUPABASE_URL` と `NEXT_PUBLIC_SUPABASE_ANON_KEY` が設定されているか確認し、設定後は Redeploy する。
+
+2. **本番 Supabase にアカウントが存在するか**  
+   ローカルで作成したアカウントは本番 Supabase には存在しません。`https://<あなたのVercelURL>/signup` から新規登録してください。
+
+3. **メール確認が有効になっている場合**  
+   Supabase → Authentication → Providers → Email → **「Confirm email」を OFF** にするか、登録メールの確認リンクをクリックしてください。
+
+4. **Supabase の Site URL が未更新の場合**  
+   Supabase → Authentication → URL Configuration → Site URL を本番 URL に変更してください。
 
 ---
 

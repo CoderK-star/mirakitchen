@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, BookOpen, ShoppingCart, User } from "lucide-react";
+import { Home, BookOpen, ShoppingCart, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { haptics } from "@/lib/haptics";
 
 const navItems = [
   { href: "/home", label: "ホーム", icon: Home },
   { href: "/recipes", label: "レシピ", icon: BookOpen },
+  { href: "/ai-chef", label: "AIシェフ", icon: Sparkles },
   { href: "/cart", label: "買い物", icon: ShoppingCart },
   { href: "/profile", label: "プロフィール", icon: User },
 ] as const;
