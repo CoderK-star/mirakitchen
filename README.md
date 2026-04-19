@@ -1,36 +1,199 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+﻿# Mirakitchen
 
-## Getting Started
+自炊ビギナーを育てる **RPG 風クッキングアプリ**。料理をゲームのように楽しみながら、一人暮らしでも自炊力を段階的に身につけられます。
 
-First, run the development server:
+---
+
+## プロジェクト概要
+
+| 項目 | 内容 |
+|------|------|
+| **コンセプト** | 「自炊のパーソナルトレーナー」×「ゆるい RPG 世界観」 |
+| **ターゲット** | 20–30 代一人暮らし・自炊経験ほぼゼロ層 |
+| **フレームワーク** | Next.js 16 (App Router) |
+| **バックエンド** | Supabase（Auth・DB・RLS） |
+| **スタイリング** | Tailwind CSS v4 + shadcn/ui |
+| **アニメーション** | Framer Motion |
+| **状態管理** | TanStack Query v5 |
+
+---
+
+## 主な機能
+
+| 機能 | 説明 |
+|------|------|
+| レベル別レシピ | Lv.1（包丁不要）〜 Lv.5 まで段階的に解放 |
+| 調理モード | 1画面 1ステップ。大きな文字と画像で迷わず調理 |
+| XP・レベルアップ | レシピ完了で XP 獲得 → レベルが上がり新レシピが解放 |
+| 買い物リスト | レシピから食材を一键追加・チェック管理 |
+| 食材辞典 | 切り方・保存方法などの Tips を確認 |
+
+---
+
+## ディレクトリ構造
+
+```
+mirakitchen/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/          # ログイン・サインアップ画面
+│   │   ├── (main)/          # メインアプリ（home / recipes / cart / profile）
+│   │   └── actions/         # Server Actions
+│   ├── components/          # UI コンポーネント
+│   ├── lib/                 # Supabase クライアント・ユーティリティ
+│   ├── types/               # 型定義
+│   └── proxy.ts             # 認証ミドルウェア（Next.js proxy）
+└── supabase/
+    └── migrations/          # DB スキーマ（SQL）
+```
+
+---
+
+## ローカル開発のセットアップ
+
+### 1. リポジトリのクローン
+
+```bash
+git clone <YOUR_REPO_URL>
+cd mirakitchen
+```
+
+### 2. 依存パッケージのインストール
+
+```bash
+npm install
+```
+
+### 3. Supabase プロジェクトの作成
+
+#### 3-1. アカウント・プロジェクト作成
+
+1. [https://supabase.com](https://supabase.com) にアクセスしてサインアップ（無料プランで可）
+2. ダッシュボードで **「New project」** をクリック
+3. 以下を入力してプロジェクトを作成する
+
+   | 項目 | 例 |
+   |------|----|
+   | Project name | `mirakitchen` |
+   | Database Password | （任意の強力なパスワード） |
+   | Region | `Northeast Asia (Tokyo)` 推奨 |
+
+4. プロジェクトの起動まで約 1〜2 分待つ
+
+#### 3-2. API キーの取得
+
+1. ダッシュボード左サイドバー → **「Project Settings」** → **「API」**
+2. 以下の値をメモする
+
+   | 変数名 | 取得場所 |
+   |--------|----------|
+   | `NEXT_PUBLIC_SUPABASE_URL` | **Project URL** |
+   | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | **Project API keys** → `anon` `public` |
+
+#### 3-3. 環境変数ファイルの作成
+
+プロジェクトルート（`mirakitchen/`）に `.env.local` を作成する。
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxxxxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+> ⚠️ **重要:** `NEXT_PUBLIC_SUPABASE_URL` は必ず `https://` から始まる完全な URL を設定してください。
+> 未設定・空文字の場合 **`Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL`** エラーが発生します。
+
+#### 3-4. データベーススキーマの適用
+
+Supabase ダッシュボードの **「SQL Editor」** で以下のファイルの内容を **順番に** 実行する。
+
+| 順番 | ファイル | 内容 |
+|------|----------|------|
+| 1 | `supabase/migrations/001_init.sql` | profiles / recipes / recipe_steps / user_history テーブル |
+| 2 | `supabase/migrations/002_shopping_list.sql` | 買い物リストテーブル |
+
+> **Supabase CLI を使う場合（オプション）:**
+>
+> ```bash
+> npx supabase login
+> npx supabase link --project-ref <PROJECT_REF>
+> npx supabase db push
+> ```
+
+#### 3-5. Auth 設定（メール認証）
+
+1. ダッシュボード → **「Authentication」** → **「Providers」**
+2. **Email** が有効になっていることを確認
+3. 開発中は **「Confirm email」を OFF** にすると即ログインできて便利
+
+#### 3-6. サンプルデータの投入（任意）
+
+「SQL Editor」でサンプルレシピを挿入するか、**Table Editor** から手動追加する。
+
+```sql
+-- レベル1 レシピの例
+INSERT INTO recipes (title, description, difficulty_level, prep_time, category, required_level, xp_reward)
+VALUES ('電子レンジで作る温泉卵', '包丁も火も不要！レンジで5分', 1, 5, '卵料理', 1, 50);
+```
+
+### 4. 開発サーバーの起動
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+[http://localhost:3000](http://localhost:3000) をブラウザで開く。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 利用可能なスクリプト
 
-## Learn More
+| コマンド | 説明 |
+|----------|------|
+| `npm run dev` | 開発サーバー起動 |
+| `npm run build` | 本番ビルド |
+| `npm run start` | 本番サーバー起動 |
+| `npm run lint` | ESLint 実行 |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## データベーススキーマ
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+profiles              ユーザーのレベル・XP 管理
+recipes               レシピ基本情報
+recipe_steps          調理ステップ（1 レシピ複数）
+user_history          料理完了ログ
+shopping_list_items   買い物リスト
+```
 
-## Deploy on Vercel
+全テーブルに **Row Level Security (RLS)** を適用済み。ユーザーは自分のデータのみ参照・操作可能。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## トラブルシューティング
+
+### `Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL`
+
+`.env.local` が存在しない、または `NEXT_PUBLIC_SUPABASE_URL` が未設定・空です。
+→「3-3. 環境変数ファイルの作成」を参照して設定してください。
+
+### `Both middleware file and proxy file are detected`
+
+`src/middleware.ts` と `src/proxy.ts` が両方存在しています。
+→ `src/middleware.ts` を削除してください（`proxy.ts` が新しい規約です）。
+
+---
+
+## 技術スタック
+
+| カテゴリ | ライブラリ / サービス |
+|----------|-----------------------|
+| フレームワーク | Next.js 16 |
+| 認証・DB | Supabase |
+| UI コンポーネント | shadcn/ui |
+| スタイリング | Tailwind CSS v4 |
+| アニメーション | Framer Motion |
+| 非同期状態管理 | TanStack Query v5 |
+| トースト通知 | Sonner |
+| アイコン | Lucide React |
+| コンフェッティ | canvas-confetti |
