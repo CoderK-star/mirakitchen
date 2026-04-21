@@ -4,18 +4,58 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import { haptics } from "@/lib/haptics";
 import { completeRecipe } from "@/app/actions/complete-recipe";
 import type { RecipeWithSteps } from "@/types";
+import { detectTerms, type CookingTerm } from "@/lib/cooking-terms";
 
 interface CookingModeProps {
   recipe: RecipeWithSteps;
 }
 
 type Phase = "cooking" | "completing" | "xp" | "levelup";
+
+/** 調理用語を1件展開表示するカード */
+function TermCard({ term }: { term: CookingTerm }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="bg-purple-50 border border-purple-100 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left min-h-[40px]"
+      >
+        <span className="text-base shrink-0">{term.emoji}</span>
+        <span className="flex-1 text-xs font-semibold text-purple-700">
+          「{term.term}」ってどのくらい？
+        </span>
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-purple-400 shrink-0 transition-transform ${
+            open ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="overflow-hidden"
+          >
+            <div className="px-3 pb-3 flex flex-col gap-1.5">
+              <p className="text-sm font-semibold text-gray-800">{term.plain}</p>
+              <p className="text-xs text-gray-600 leading-relaxed">{term.detail}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const stepVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? "100%" : "-100%", opacity: 0 }),
@@ -173,6 +213,20 @@ export function CookingMode({ recipe }: CookingModeProps) {
                 </p>
               </div>
             )}
+
+            {/* 用語解説カード — tip と instruction 内の調理用語を自動検出 */}
+            {(() => {
+              const text = `${currentStep.instruction} ${currentStep.tip ?? ""}`;
+              const terms = detectTerms(text);
+              if (terms.length === 0) return null;
+              return (
+                <div className="mt-3 flex flex-col gap-2">
+                  {terms.map((term) => (
+                    <TermCard key={term.term} term={term} />
+                  ))}
+                </div>
+              );
+            })()}
           </motion.div>
         </AnimatePresence>
       </div>
